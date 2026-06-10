@@ -1,0 +1,39 @@
+flowchart TD
+    subgraph API["Camada de API (FastAPI)"]
+        A1["auth_routes<br/>/auth/login-classical · /auth/verify-classical"]
+        A2["pqc_auth_routes<br/>/auth/login-pqc · /auth/verify-pqc · /auth/kem-exchange"]
+        A3["hybrid_auth_routes<br/>/auth/login-hybrid · /auth/verify-hybrid"]
+    end
+
+    subgraph SVC["Camada de Serviço"]
+        S1["ClassicalAuthService"]
+        S2["PQCLoginService"]
+        S3["HybridAuthService<br/>(compõe S1 + S2)"]
+    end
+
+    subgraph IFACE["Interfaces Criptográficas (ABCs)"]
+        I1["IDigitalSignature"]
+        I2["IKeyEncapsulation"]
+    end
+
+    subgraph IMPL["Implementações Concretas"]
+        C1["RSASignature<br/>RSA-2048 · cryptography"]
+        C2["DilithiumSignature<br/>ML-DSA-44 · liboqs"]
+        C3["KyberKEM<br/>Kyber512 · liboqs"]
+    end
+
+    DB[("UserRepository<br/>SQLite · bcrypt")]
+
+    A1 --> S1
+    A2 --> S2
+    A3 --> S3
+    S3 -.->|"compõe"| S1
+    S3 -.->|"compõe"| S2
+    S1 --> I1
+    S2 --> I1
+    S2 --> I2
+    I1 -.->|"impl."| C1
+    I1 -.->|"impl."| C2
+    I2 -.->|"impl."| C3
+    S1 --> DB
+    S2 --> DB

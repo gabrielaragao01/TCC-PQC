@@ -92,7 +92,7 @@ Essa assimetria será comparada com ML-DSA-44 na Fase 3, onde a diferença entre
 
 | Algoritmo | Chave pública | Chave privada | Tipo |
 |-----------|--------------|---------------|------|
-| RSA-2048 | 256 bytes | ~1190 bytes (PKCS8 DER) | Clássico |
+| RSA-2048 | 294 bytes (DER) | ~1190 bytes (PKCS8 DER) | Clássico |
 | Kyber512 | 800 bytes | 1632 bytes | PQC KEM |
 | ML-DSA-44 | 1312 bytes | 2528 bytes | PQC Sign |
 
@@ -127,8 +127,8 @@ Essa assimetria será comparada com ML-DSA-44 na Fase 3, onde a diferença entre
 | Métrica | Valor |
 |---------|-------|
 | Comprimento do token ML-DSA-44 | 3343 chars (~3.3 KB) |
-| Comprimento do token RS256 | ~200 bytes |
-| Fator de aumento | ~16.7× |
+| Comprimento do token RS256 | 451 bytes |
+| Fator de aumento | 7.4× |
 
 A diferença de tamanho deve-se principalmente à assinatura ML-DSA-44 (2420 bytes em base64url, vs 342 bytes da assinatura RSA-2048).
 
@@ -165,9 +165,9 @@ O endpoint `POST /auth/login-hybrid` assina o mesmo payload com ambos os algorit
 
 | Componente | Tamanho |
 |-----------|---------|
-| Token RS256 (JWT) | ~200 bytes |
-| Token ML-DSA-44 (custom) | ~3343 chars (~3.3 KB) |
-| Response total (login-hybrid) | ~3.6 KB |
+| Token RS256 (JWT) | 451 bytes |
+| Token ML-DSA-44 (custom) | ~3342 chars (~3.3 KB) |
+| Response total (login-hybrid) | ~3.8 KB |
 
 ### Trade-off resumido (Fase 4)
 
@@ -175,8 +175,8 @@ O endpoint `POST /auth/login-hybrid` assina o mesmo payload com ambos os algorit
 |---------|------------------|------------------|----------|
 | Sign latency | ~1–2ms | ~0.107ms | PQC |
 | Verify latency | ~0.3ms | ~0.038ms | PQC |
-| Token size | ~200 bytes | ~3.3 KB | Clássico |
-| Key size (pub) | 256 bytes | 1312 bytes | Clássico |
+| Token size | 451 bytes | ~3.3 KB | Clássico |
+| Key size (pub) | 294 bytes | 1312 bytes | Clássico |
 | Key size (priv) | ~1190 bytes | 2528 bytes | Clássico |
 | Quantum-safe | Não | Sim | PQC |
 

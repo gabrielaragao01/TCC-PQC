@@ -18,7 +18,7 @@ Você é um especialista em Segurança da Informação e Engenharia de Backend. 
 - `src/auth/`: Service layer — classical_service.py, pqc_service.py, hybrid_service.py
 - `src/api/`: Endpoints FastAPI (routes.py, auth_routes.py, pqc_auth_routes.py, hybrid_auth_routes.py)
 - `src/db/`: SQLite database layer (database.py, repository.py, models.py)
-- `benchmark/`: Runner, analysis, charts, throughput, metrics
+- `benchmark/`: Runner, analysis, charts, throughput, metrics, nist_compare (comparação NIST — Fase 6)
 - `results/`: CSVs e PNGs gerados pelo benchmark
 
 ## Regras de Implementação
@@ -29,9 +29,11 @@ Você é um especialista em Segurança da Informação e Engenharia de Backend. 
 5. **oqs** só é importado em `kyber.py` e `dilithium.py`. Service/API dependem de interfaces abstratas.
 
 ## Status do Projeto
-Todas as 5 fases estão completas:
+Todas as 6 fases estão completas:
 - Fase 1: Setup e prototipagem com liboqs
 - Fase 2: Baseline clássico (RSA-2048 + JWT RS256)
 - Fase 3: PQC puro (ML-DSA-44 + Kyber512)
 - Fase 4: Modo híbrido (clássico + PQC)
 - Fase 5: Benchmarking formal (N=100, CSV, gráficos)
+- Fase 5b: Reprodutibilidade (3 execuções independentes, multi-run, 6000 amostras, médias agregadas) — fonte oficial de dados do TCC
+- Fase 6: Comparação com referência NIST (CRYSTALS-Dilithium v3.1 / Kyber v3.02, contagens de ciclos da especificação)

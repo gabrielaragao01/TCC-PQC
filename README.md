@@ -62,16 +62,25 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ## Benchmarks
 
 ```bash
-# Pipeline completo (~2 min)
+# Pipeline completo single-run (~2 min)
 ./scripts/run_benchmarks.sh
 
-# Ou passo a passo
+# Multi-run para reproducibilidade (3 runs, 6000 amostras, ~8 min) — fonte oficial dos dados do TCC
+./scripts/run_benchmarks.sh --multi-run
+
+# Ou passo a passo (single run)
 python -m benchmark.runner --environment arm64-macos
 python -m benchmark.analysis
 python -m benchmark.charts
+
+# Comparacao com referencias NIST (Fase 6)
+python -m benchmark.nist_compare
+
+# Gerar relatorio PDF
+python scripts/generate_report_pdf.py   # -> results/benchmark_report.pdf
 ```
 
-Resultados em `results/` (CSVs + PNGs). Analise detalhada em [`docs/benchmarks.md`](docs/benchmarks.md).
+Resultados em `results/` (CSVs + PNGs). Analise detalhada em [`docs/benchmarks.md`](docs/benchmarks.md) e comparacao NIST em [`docs/nist_comparison.md`](docs/nist_comparison.md).
 
 ## Docker
 
@@ -91,12 +100,15 @@ src/
   auth/            Service layer (classical, pqc, hybrid)
   api/             Endpoints FastAPI
   db/              SQLite + repository pattern
-benchmark/         Runner, analysis, charts, throughput
-results/           Dados gerados (CSV, PNG)
+benchmark/         Runner, analysis, charts, throughput, nist_compare
+scripts/           run_benchmarks.sh, generate_report_pdf.py
+tests/             Suite de testes (53 testes)
+results/           Dados gerados (CSV, PNG, PDF)
 docs/              Documentacao tecnica
 ```
 
 ## Documentacao
 
-- [`docs/benchmarks.md`](docs/benchmarks.md) — Dados formais de benchmark (N=100)
+- [`docs/benchmarks.md`](docs/benchmarks.md) — Dados formais de benchmark (single-run N=100 + multi-run oficial, 3 runs / 6000 amostras)
+- [`docs/nist_comparison.md`](docs/nist_comparison.md) — Comparacao com referencias NIST (CRYSTALS-Dilithium v3.1 / Kyber v3.02), Fase 6
 - [`docs/context.md`](docs/context.md) — Diario de desenvolvimento com decisoes de arquitetura

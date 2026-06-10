@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TCC (Trabalho de Conclusão de Curso) — Post-Quantum Cryptography (PQC) authentication system for web applications. The project benchmarks PQC algorithms (Kyber512 KEM, ML-DSA-44 signatures via liboqs) against classical cryptography (RSA-2048 + JWT RS256). Built in 5 phases; **all phases complete**.
+TCC (Trabalho de Conclusão de Curso) — Post-Quantum Cryptography (PQC) authentication system for web applications. The project benchmarks PQC algorithms (Kyber512 KEM, ML-DSA-44 signatures via liboqs) against classical cryptography (RSA-2048 + JWT RS256). Built in 6 phases (1–6, plus a Phase 5b reproducibility pass); **all phases complete**.
 
 > **Library versions in use:** liboqs 0.15.0 (C library, compiled from source) + liboqs-python 0.14.1 (Python wrapper). Version mismatch is cosmetic — the mathematical core of all algorithms is identical. See `docs/context.md` Semana 2 for full context.
 
@@ -36,9 +36,9 @@ Smoke test endpoints: `GET /pqc/health`, `GET /docs`
 
 ## Architecture
 
-Clean architecture with interface-based dependency injection, designed to grow across 5 phases without breaking existing layers.
+Clean architecture with interface-based dependency injection, designed to grow across 6 phases without breaking existing layers.
 
-### Full Directory Structure (Phase 5)
+### Full Directory Structure (Phase 6)
 
 ```
 benchmark/
@@ -49,9 +49,11 @@ benchmark/
   analysis.py                     ← statistics: mean, median, stdev, P95, P99 + CSV export
   charts.py                       ← bar charts, box plots, violin plots (matplotlib/seaborn)
   throughput.py                   ← HTTP throughput test via httpx
-results/                          ← benchmark output (CSVs, PNGs) — gitignored except .gitkeep
+  nist_compare.py                 ← NIST reference comparison, Phase 6 (python -m benchmark.nist_compare)
+results/                          ← benchmark output (CSVs, PNGs, PDF) — gitignored except .gitkeep
 scripts/
   run_benchmarks.sh               ← full benchmark pipeline: runner → analysis → charts
+  generate_report_pdf.py          ← builds results/benchmark_report.pdf
 src/
   config.py                       ← pydantic-settings singleton, reads .env
   crypto/
@@ -156,12 +158,15 @@ Single `settings` singleton via `pydantic-settings`, loaded from `.env`.
 | 3 | Pure PQC authentication: ML-DSA-44 tokens, Kyber512 KEM handshake | ✅ Complete |
 | 4 | Hybrid mode: classical + PQC side by side, dual-token strategy | ✅ Complete |
 | 5 | Benchmarking & performance analysis: N=100 iterations, CSV export, charts | ✅ Complete |
+| 5b | Reproducibility: 3 independent runs (6000 samples), grand means — official TCC data source | ✅ Complete |
+| 6 | NIST reference comparison: CRYSTALS-Dilithium v3.1 / Kyber v3.02 spec cycle counts | ✅ Complete |
 
 Development diary with architecture decisions: `docs/context.md` (Portuguese).
-Formal benchmark data (N=100): `docs/benchmarks.md`.
-Raw data + charts: `results/` directory.
+Formal benchmark data: `docs/benchmarks.md`. The **official TCC figures are the Phase 5b grand means (3 runs, 6000 samples)**, which supersede the single-run values.
+Phase 6 NIST reference comparison: `docs/nist_comparison.md`.
+Raw data + charts: `results/` directory (single-run CSVs/PNGs, plus `results/multi_run/`, `results/runs/run_{1,2,3}/`, and `results/benchmark_report.pdf`).
 
-## Running Benchmarks (Phase 5)
+## Running Benchmarks (Phases 5, 5b, 6)
 
 ```bash
 # Full benchmark pipeline (local, ~2 min)
@@ -188,4 +193,10 @@ python -m benchmark.throughput
 
 # Via Docker
 docker compose --profile benchmark run benchmark
+
+# Phase 6: NIST reference comparison (spec cycle counts)
+python -m benchmark.nist_compare
+
+# Generate consolidated PDF report → results/benchmark_report.pdf
+python scripts/generate_report_pdf.py
 ```

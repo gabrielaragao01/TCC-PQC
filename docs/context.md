@@ -904,11 +904,11 @@ RSA verify usa expoente público `e=65537` (pequeno), então é intrinsecamente 
 
 | Artefato | RSA-2048 | ML-DSA-44 | Fator |
 |----------|---------|-----------|-------|
-| Token completo | ~200 bytes | ~3343 bytes | 16.7× |
+| Token completo | 451 bytes | 3342 bytes | 7.4× |
 | Assinatura raw | 256 bytes | 2420 bytes | 9.5× |
-| Chave pública | 256 bytes | 1312 bytes | 5.1× |
+| Chave pública | 294 bytes | 1312 bytes | 4.5× |
 
-Para web auth, isso significa: header `Authorization` de ~3.3 KB vs ~200 bytes. Em APIs com muitas chamadas, o overhead de rede pode ser significativo.
+Para web auth, isso significa: header `Authorization` de ~3.3 KB vs 451 bytes. Em APIs com muitas chamadas, o overhead de rede pode ser significativo.
 
 **4. Keygen RSA é extremamente lento (~55ms) vs ML-DSA (~0.04ms)**
 
@@ -935,6 +935,85 @@ Sig clássica:        RSA-2048 / RS256
 Banco:               SQLite via data/pqc_auth.db
 Testes:              53 passed
 Benchmark:           2000 samples, 20 operações, 5 gráficos ✅
+```
+
+---
+
+## Semana 7 (2026-04-12)
+
+### Fase 5b — Reprodutibilidade: Multi-Run (3 rodadas independentes)
+
+#### O que foi feito
+
+Uma única rodada de N=100 é vulnerável a ruído de escalonamento do SO, GC e térmico. Para robustez estatística adequada a um TCC, o runner foi estendido com suporte a múltiplas rodadas independentes (`--run-id`), agregação cross-run e cálculo de **grand means**.
+
+**Arquivos modificados/criados:**
+- `benchmark/runner.py` → suporte a `--run-id`; saída em `results/runs/run_{1,2,3}/`
+- `benchmark/analysis.py` → flag `--multi-run`: agrega as 3 rodadas, calcula grand mean por operação, exporta para `results/multi_run/`
+- `benchmark/charts.py` → flag `--multi-run`
+- `scripts/run_benchmarks.sh` → flag `--multi-run` (pipeline completo das 3 rodadas, ~8 min)
+- `scripts/generate_report_pdf.py` → gera `results/benchmark_report.pdf`
+- `results/multi_run/*`, `results/runs/run_{1,2,3}/*`, `results/benchmark_report.pdf` (novos artefatos)
+
+**Metodologia:** 3 execuções independentes do benchmark completo (N=100, warmup=10 cada), com 30s de cooldown entre runs para evitar thermal throttling. Amostragem: single run = 2000 samples; multi-run = **6000 amostras** (3 × N=100). 53 testes passando, sem regressão.
+
+#### Resultados oficiais (multi-run, grand means — fonte de dados oficial do TCC)
+
+Estes valores **substituem** os de single-run das semanas anteriores.
+
+Service Layer:
+
+| Comparação | RS256 (ms) | ML-DSA-44 (ms) | Speedup |
+|------------|-----------|----------------|---------|
+| Token Signing | 1.629 | 0.203 | 8.0× (PQC mais rápido) |
+| Token Verification | 0.058 | 0.044 | 1.3× |
+
+Raw Crypto:
+
+| Comparação | RSA-2048 (ms) | ML-DSA-44 (ms) | Speedup |
+|------------|--------------|----------------|---------|
+| Key Generation | 108.333 | 0.049 | 2206× |
+| Signature | 89.323 | 0.106 | 842× |
+| Verification | 0.113 | 0.044 | 2.6× |
+
+Tamanhos (valores medidos — Cap. 5, Tabela 5.6; corrigem a estimativa anterior de ~200 B / 16,7×): token ML-DSA-44 3342 bytes vs RS256 **451 bytes** (**7,4×**); assinatura raw 2420 vs 256 bytes (9,5×); chave pública 1312 vs 294 bytes (4,5×).
+
+Ver [`docs/benchmarks.md`](benchmarks.md) (Fase 5b) para os dados completos. Os valores single-run das Semanas 3–6 permanecem registrados como histórico, mas estão marcados como superseded.
+
+---
+
+## Semana 8 (2026-04-16)
+
+### Fase 6 — Comparação com Referência NIST
+
+#### O que foi feito
+
+Para contextualizar academicamente os resultados medidos, a Fase 6 compara os tempos do nosso ambiente (ARM64, Apple Silicon) contra as contagens de ciclos oficiais publicadas nas especificações NIST: CRYSTALS-Dilithium v3.1 e CRYSTALS-Kyber v3.02 (referência C portável e otimização AVX2).
+
+**Arquivos criados:**
+- `benchmark/nist_compare.py` → carrega as contagens de ciclos oficiais da spec e compara com nossas medições (invoke: `python -m benchmark.nist_compare`)
+- `docs/nist_comparison.md` → análise dedicada da Fase 6
+- Resumo adicionado a `docs/benchmarks.md` (Fase 6)
+
+#### Principais conclusões
+
+- **ML-DSA-44:** desempenho em paridade com o AVX2 de referência da NIST (0,97–1,06× do AVX2) e 2,4–4,0× mais rápido que a referência C portável.
+- **Kyber512:** 1,39–1,86× mais lento que o AVX2 de referência, porém 2,0–3,4× mais rápido que a referência C portável.
+
+Isso confirma que o ambiente ARM64 nativo produz números coerentes com as implementações otimizadas oficiais, dando credibilidade aos benchmarks do TCC. Ver [`docs/nist_comparison.md`](nist_comparison.md) para a análise completa.
+
+#### Estado final do projeto (Fase 6 completa)
+
+```
+Python:              3.13
+liboqs (C):          0.15.0
+liboqs-python:       0.14.1
+KEM ativo:           Kyber512 (equiv. FIPS: ML-KEM-512)
+Sig PQC ativo:       ML-DSA-44 (FIPS 204)
+Sig clássica:        RSA-2048 / RS256
+Testes:              53 passed
+Benchmark oficial:   multi-run, 6000 samples (3 × N=100), grand means
+Fase 6:              comparação NIST (Dilithium v3.1 / Kyber v3.02) ✅
 ```
 
 ---
