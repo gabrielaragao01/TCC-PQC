@@ -2,11 +2,13 @@
 
 ABBASI, Maryam; CARDOSO, Filipe; VÁZ, Paulo; SILVA, José; MARTINS, Pedro. A practical performance benchmark of post-quantum cryptography across heterogeneous computing environments. **Cryptography**, v. 9, n. 2, art. 32, 2025. DOI: 10.3390/cryptography9020032.
 
-ALKHULAIFI, Abdolmaged; EL-ALFY, El-Sayed M. Exploring lattice-based post-quantum signature for JWT authentication: review and case study. *In*: IEEE 91ST VEHICULAR TECHNOLOGY CONFERENCE (VTC2020-Spring), 2020, Antwerp. **Anais [...]**. Piscataway: IEEE, 2020. DOI: 10.1109/VTC2020-Spring48590.2020.9129505.
+ALKHULAIFI, Abdolmaged; EL-ALFY, El-Sayed M. Exploring lattice-based post-quantum signature for JWT authentication: review and case study. *In*: IEEE 91ST VEHICULAR TECHNOLOGY CONFERENCE (VTC2020-Spring), 2020, Antwerp. **Anais [...]**. Piscataway: IEEE, 2020. p. 1–5. DOI: 10.1109/VTC2020-Spring48590.2020.9129505.
 
 ANASTASOVA, Mila; KAMPANAKIS, Panos. **MLWE's impact on Web Metrics, mTLS TTLB, and AWS service endpoint connections**. Cryptology ePrint Archive, Paper 2025/2235. 2025. Pré-print não submetido a revisão por pares. Disponível em: https://eprint.iacr.org/2025/2235. Acesso em: 22 maio 2026.
 
 AVANZI, Roberto; BOS, Joppe; DUCAS, Léo; KILTZ, Eike; LEPOINT, Tancrède; LYUBASHEVSKY, Vadim; SCHANCK, John M.; SCHWABE, Peter; SEILER, Gregor; STEHLÉ, Damien. **CRYSTALS-Kyber: Algorithm Specifications and Supporting Documentation (Version 3.02)**. NIST PQC Round 3 Submission, 2021. Disponível em: https://pq-crystals.org/kyber/. Acesso em: 10 maio 2026.
+
+BAI, Shi; DUCAS, Léo; KILTZ, Eike; LEPOINT, Tancrède; LYUBASHEVSKY, Vadim; SCHWABE, Peter; SEILER, Gregor; STEHLÉ, Damien. **CRYSTALS-Dilithium: Algorithm Specifications and Supporting Documentation (Version 3.1)**. NIST PQC Round 3 Submission, fev. 2021. Disponível em: https://pq-crystals.org/dilithium/. Acesso em: 10 maio 2026.
 
 BERNSTEIN, Daniel J.; LANGE, Tanja. Post-quantum cryptography. **Nature**, v. 549, n. 7671, p. 188–194, set. 2017. DOI: 10.1038/nature23461.
 
@@ -16,13 +18,10 @@ BOS, Joppe; DUCAS, Léo; KILTZ, Eike; LEPOINT, Tancrède; LYUBASHEVSKY, Vadim; S
 
 CHEN, Lily; JORDAN, Stephen; LIU, Yi-Kai; MOODY, Dustin; PERALTA, Rene; PERLNER, Ray; SMITH-TONE, Daniel. **Report on Post-Quantum Cryptography**. NIST Internal Report 8105. Gaithersburg: National Institute of Standards and Technology, 2016. DOI: 10.6028/NIST.IR.8105.
 
-DEMIR, Elif Dicle; GORGULU, Idil; ONBASLI, Mehmet Cengiz. Micro and transport layer security benchmarking of post-quantum versus classical cryptography. **IEEE Access**, v. 14, p. 56099 et seq., 2026. DOI: 10.1109/ACCESS.2026.3682760.
+DEMIR, Elif Dicle; GORGULU, Idil; ONBASLI, Mehmet Cengiz. Micro and transport layer security benchmarking of post-quantum versus classical cryptography. **IEEE Access**, v. 14, p. 56099–56111, 2026. DOI: 10.1109/ACCESS.2026.3682760.
 
 DUCAS, Léo; KILTZ, Eike; LEPOINT, Tancrède; LYUBASHEVSKY, Vadim; SCHWABE, Peter; SEILER, Gregor; STEHLÉ, Damien. CRYSTALS-Dilithium: a lattice-based digital signature scheme. **IACR Transactions on Cryptographic Hardware and Embedded Systems**, v. 2018, n. 1, p. 238–268, 2018. DOI: 10.13154/tches.v2018.i1.238-268.
-
-DUCAS, Léo; KILTZ, Eike; LEPOINT, Tancrède; LYUBASHEVSKY, Vadim; SCHWABE, Peter; SEILER, Gregor; STEHLÉ, Damien. **CRYSTALS-Dilithium: Algorithm Specifications and Supporting Documentation (Version 3.1)**. NIST PQC Round 3 Submission, fev. 2021. Disponível em: https://pq-crystals.org/dilithium/. Acesso em: 10 maio 2026.
-
-GIRON, Alexandre Augusto; PERIN, Lucas Pandolfo; NASCIMENTO, João Pedro Adami do; CUSTÓDIO, Ricardo. Post-quantum hybrid KEMTLS performance in simulated and real network environments. *In*: INTERNATIONAL CONFERENCE ON CRYPTOLOGY AND INFORMATION SECURITY IN LATIN AMERICA (LATINCRYPT), 8., 2023, Quito. **Anais [...]**. Cham: Springer, 2023. (Lecture Notes in Computer Science, v. 14168). DOI: 10.1007/978-3-031-44469-2_15.
+GIRON, Alexandre Augusto; NASCIMENTO, João Pedro Adami do; CUSTÓDIO, Ricardo; PERIN, Lucas Pandolfo; MATEU, Víctor. Post-quantum hybrid KEMTLS performance in simulated and real network environments. *In*: INTERNATIONAL CONFERENCE ON CRYPTOLOGY AND INFORMATION SECURITY IN LATIN AMERICA (LATINCRYPT), 8., 2023, Quito. **Anais [...]**. Cham: Springer, 2023. p. 293–312. (Lecture Notes in Computer Science, v. 14168). DOI: 10.1007/978-3-031-44469-2_15.
 
 İNCE, Cemile. Hybrid ML-KEM in TLS 1.3: performance analysis on ARM64 under network stress. **Journal of Computer Science — Anatolian Science**, 2026. DOI: 10.53070/bbd.1898820. Disponível em: https://dergipark.org.tr/en/pub/bbd. Acesso em: 26 maio 2026.
 
@@ -30,7 +29,7 @@ JONES, Michael B.; BRADLEY, John; SAKIMURA, Nat. **JSON Web Signature (JWS)**. R
 
 JONES, Michael B.; BRADLEY, John; SAKIMURA, Nat. **JSON Web Token (JWT)**. RFC 7519. Internet Engineering Task Force (IETF), maio 2015b. Disponível em: https://datatracker.ietf.org/doc/html/rfc7519. Acesso em: 10 maio 2026.
 
-KALPANA, B. N.; SARAVANA KUMAR, R. Synergizing quantum-safe signatures with JWT for unparalleled security in web applications. **Mesopotamian Journal of Cybersecurity**, v. 5, n. 2, p. 361–374, 2025. ISSN 2958-6542. DOI: 10.58496/MJCS/2025/023.
+KALPANA, B. N.; SARAVANA KUMAR, R. Synergizing quantum-safe signatures with JWT for unparalleled security in web applications. **Mesopotamian Journal of Cybersecurity**, v. 5, n. 2, p. 361–374, 2025. ISSN 2958-6542. DOI: 10.58496/MJCS/2025/023. Disponível em: https://journals.mesopotamian.press/index.php/CyberSecurity/article/view/808. Acesso em: 14 jun. 2026.
 
 KITCHENHAM, Barbara; CHARTERS, Stuart. **Guidelines for performing systematic literature reviews in software engineering**. EBSE Technical Report EBSE-2007-01. Keele University; Durham University, 2007.
 
