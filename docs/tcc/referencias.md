@@ -21,6 +21,7 @@ CHEN, Lily; JORDAN, Stephen; LIU, Yi-Kai; MOODY, Dustin; PERALTA, Rene; PERLNER,
 DEMIR, Elif Dicle; GORGULU, Idil; ONBASLI, Mehmet Cengiz. Micro and transport layer security benchmarking of post-quantum versus classical cryptography. **IEEE Access**, v. 14, p. 56099–56111, 2026. DOI: 10.1109/ACCESS.2026.3682760.
 
 DUCAS, Léo; KILTZ, Eike; LEPOINT, Tancrède; LYUBASHEVSKY, Vadim; SCHWABE, Peter; SEILER, Gregor; STEHLÉ, Damien. CRYSTALS-Dilithium: a lattice-based digital signature scheme. **IACR Transactions on Cryptographic Hardware and Embedded Systems**, v. 2018, n. 1, p. 238–268, 2018. DOI: 10.13154/tches.v2018.i1.238-268.
+
 GIRON, Alexandre Augusto; NASCIMENTO, João Pedro Adami do; CUSTÓDIO, Ricardo; PERIN, Lucas Pandolfo; MATEU, Víctor. Post-quantum hybrid KEMTLS performance in simulated and real network environments. *In*: INTERNATIONAL CONFERENCE ON CRYPTOLOGY AND INFORMATION SECURITY IN LATIN AMERICA (LATINCRYPT), 8., 2023, Quito. **Anais [...]**. Cham: Springer, 2023. p. 293–312. (Lecture Notes in Computer Science, v. 14168). DOI: 10.1007/978-3-031-44469-2_15.
 
 İNCE, Cemile. Hybrid ML-KEM in TLS 1.3: performance analysis on ARM64 under network stress. **Journal of Computer Science — Anatolian Science**, 2026. DOI: 10.53070/bbd.1898820. Disponível em: https://dergipark.org.tr/en/pub/bbd. Acesso em: 26 maio 2026.
@@ -41,9 +42,9 @@ NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY. **FIPS 204: Module-Lattice-Based
 
 OLUSHOLA, A.; MEENAKSHI, S. P. Design and implementation of an authenticated post-quantum session protocol using ML-KEM (Kyber), ML-DSA (Dilithium), and AES-256-GCM. **Frontiers in Physics**, v. 13, 2025. DOI: 10.3389/fphy.2025.1723966.
 
-OPEN QUANTUM SAFE. **liboqs: C library for prototyping and experimenting with quantum-resistant cryptography**. Versão 0.15.0. 2024. Disponível em: https://github.com/open-quantum-safe/liboqs. Acesso em: 10 maio 2026.
+OPEN QUANTUM SAFE. **liboqs: C library for prototyping and experimenting with quantum-resistant cryptography**. Versão 0.15.0. 2025. Disponível em: https://github.com/open-quantum-safe/liboqs. Acesso em: 10 maio 2026.
 
-PAQUIN, Christian; STEBILA, Douglas; TAMVADA, Goutam. Benchmarking post-quantum cryptography in TLS. *In*: POST-QUANTUM CRYPTOGRAPHY (PQCrypto), 11., 2020, Paris. **Anais [...]**. Cham: Springer, 2020. p. 72–91. DOI: 10.1007/978-3-030-44223-1_26.
+PAQUIN, Christian; STEBILA, Douglas; TAMVADA, Goutam. Benchmarking post-quantum cryptography in TLS. *In*: POST-QUANTUM CRYPTOGRAPHY (PQCrypto), 11., 2020, Paris. **Anais [...]**. Cham: Springer, 2020. p. 72–91. DOI: 10.1007/978-3-030-44223-1_5.
 
 PAUL, Sebastian; KUZOVKOVA, Yulia; LAHR, Norman; NIEDERHAGEN, Ruben. Mixed certificate chains for the transition to post-quantum authentication in TLS 1.3. *In*: ACM ASIA CONFERENCE ON COMPUTER AND COMMUNICATIONS SECURITY (ASIACCS), 2022, Nagasaki. **Anais [...]**. New York: ACM, 2022. p. 727–740. DOI: 10.1145/3488932.3497755.
 

@@ -22,7 +22,7 @@ Tabela 5.1 — Latência da geração de pares de chaves no nível de primitiva 
 
 Fonte: Elaborado pelo autor (2026).
 
-Os dados revelam uma diferença de aproximadamente 2.206 vezes entre o RSA-2048 e o ML-DSA-44 na geração de chaves, e de cerca de 6.018 vezes entre o RSA-2048 e o Kyber512. Essa disparidade decorre da própria natureza matemática dos algoritmos. A geração de chaves RSA exige a obtenção de dois números primos de grande magnitude, processo que envolve testes de primalidade probabilísticos (como Miller-Rabin) cujo custo cresce de forma superlinear com o tamanho da chave. Os algoritmos baseados em reticulados, em contraste, geram chaves a partir de operações matriciais sobre polinômios em anéis cíclicos, com complexidade dominada por transformadas teórico-numéricas (NTT) executadas em tempo $O(n \log n)$ (NIST, 2024).
+Os dados revelam uma diferença de aproximadamente 2.206 vezes entre o RSA-2048 e o ML-DSA-44 na geração de chaves, e de cerca de 6.018 vezes entre o RSA-2048 e o Kyber512. Essa disparidade decorre da própria natureza matemática dos algoritmos. A geração de chaves RSA exige a obtenção de dois números primos de grande magnitude, processo que envolve testes de primalidade probabilísticos (como Miller-Rabin) cujo custo cresce de forma superlinear com o tamanho da chave. Os algoritmos baseados em reticulados, em contraste, geram chaves a partir de operações matriciais sobre polinômios em anéis cíclicos, com complexidade dominada por transformadas teórico-numéricas (NTT) executadas em tempo $O(n \log n)$ (NIST, 2024a, 2024b).
 
 A elevada variância intra-amostra observada no `raw_rsa_keygen` (desvio padrão pooled de 61,57 ms sobre as 300 amostras, com P95 atingindo 224,76 ms) reflete justamente a natureza probabilística dos testes de primalidade: ocasionalmente, vários candidatos são rejeitados antes que um número primo seja confirmado, alongando o tempo total. A grand mean de 108,33 ms ao longo das três execuções, em contraste, mostrou-se altamente reprodutível, com coeficiente de variação inter-run de apenas 3,65% — isto é, a distribuição em si é dispersa, mas a posição central da distribuição é estável de uma execução para outra. Essa diferença entre dispersão intra-amostra e estabilidade inter-run é discutida em maior profundidade na Seção 5.5.
 
@@ -43,7 +43,7 @@ Tabela 5.2 — Latência das operações de assinatura e verificação no nível
 
 Fonte: Elaborado pelo autor (2026).
 
-Verifica-se que o ML-DSA-44 foi aproximadamente 8,0 vezes mais rápido que o RS256 na operação de assinatura e cerca de 1,3 vezes mais rápido na verificação. O resultado mais relevante é o da assinatura, pois é a operação de maior custo no fluxo clássico e a que ocorre no caminho crítico do login. Esse comportamento é coerente com a literatura: a assinatura RSA emprega exponenciação modular com expoente privado de grande magnitude, ao passo que a assinatura ML-DSA-44 consiste em operações sobre matrizes de polinômios de coeficientes pequenos, sustentadas por NTT eficientes (Ducas et al., 2021).
+Verifica-se que o ML-DSA-44 foi aproximadamente 8,0 vezes mais rápido que o RS256 na operação de assinatura e cerca de 1,3 vezes mais rápido na verificação. O resultado mais relevante é o da assinatura, pois é a operação de maior custo no fluxo clássico e a que ocorre no caminho crítico do login. Esse comportamento é coerente com a literatura: a assinatura RSA emprega exponenciação modular com expoente privado de grande magnitude, ao passo que a assinatura ML-DSA-44 consiste em operações sobre matrizes de polinômios de coeficientes pequenos, sustentadas por NTT eficientes (Bai et al., 2021).
 
 A operação de verificação, em contraste, apresenta diferença mais modesta. Esse achado é igualmente esperado: a verificação RSA utiliza a chave pública com expoente de Fermat $e = 65.537$, valor binariamente esparso que torna a exponenciação modular intrinsecamente rápida — característica histórica do RS256 e razão pela qual o algoritmo permaneceu viável em sistemas web por décadas. Já o ML-DSA-44 não exibe assimetria pronunciada entre assinatura e verificação, dado que ambas as operações recaem sobre o mesmo aparato algébrico de reticulados.
 
@@ -79,7 +79,7 @@ Fonte: Elaborado pelo autor (2026).
 
 Todas as três operações foram executadas em latências sub-milissegundo, com tempo agregado de aproximadamente 0,053 ms para um round-trip completo de troca de chave. Esse valor é desprezível em qualquer contexto realista de comunicação em rede, no qual a latência típica entre cliente e servidor situa-se na ordem de dezenas a centenas de milissegundos. Em termos relativos, o custo computacional de um handshake Kyber512 representa menos de 0,1% da latência de rede esperada em uma chamada HTTPS típica, o que sustenta a viabilidade técnica de adoção do mecanismo em protocolos de autenticação web sem prejuízo perceptível ao tempo de resposta.
 
-Adicionalmente, observa-se que o desvio padrão das três operações é significativamente baixo (todos abaixo de 0,001 ms), o que indica que as operações Kyber512 são altamente estáveis em sua execução. A ausência de operações condicionais dependentes de dados nos algoritmos baseados em reticulados — propriedade essencial para resistência a ataques de canal lateral por temporização — contribui para essa baixa variabilidade.
+Adicionalmente, observa-se que o desvio padrão das três operações é significativamente baixo (da ordem de 0,001 a 0,002 ms, conforme a Tabela 5.3), o que indica que as operações Kyber512 são altamente estáveis em sua execução. A ausência de operações condicionais dependentes de dados nos algoritmos baseados em reticulados — propriedade essencial para resistência a ataques de canal lateral por temporização — contribui para essa baixa variabilidade.
 
 ## 5.2 Comparação Service Layer vs Raw Crypto
 
@@ -90,14 +90,13 @@ Tabela 5.4 — Comparação entre o nível de serviço e a primitiva criptográf
 | Operação                 | Algoritmo  | Service (ms) | Raw (ms)  | Sobrecusto (ms) | Sobrecusto (%) |
 |--------------------------|------------|-------------:|----------:|----------------:|---------------:|
 | Sign — token             | RS256      |        1,629 |    89,323 |            —    |             —  |
-| Sign — primitiva pré-carregada | RSA-2048 |       —      |     —     |          —      |          —     |
 | Sign                     | ML-DSA-44  |        0,203 |     0,106 |           0,097 |          91,5  |
 | Verify                   | RS256      |        0,058 |     0,113 |            —    |             —  |
 | Verify                   | ML-DSA-44  |        0,044 |     0,044 |           0,000 |           0,0  |
 
 Fonte: Elaborado pelo autor (2026).
 
-A comparação entre o `jwt_sign` (1,629 ms) e o `raw_rsa_sign` (89,323 ms) merece atenção especial. À primeira vista, a diferença sugeriria que a camada de serviço seria 54 vezes mais rápida que a primitiva — interpretação evidentemente equivocada. A explicação reside na metodologia: a primitiva raw mede o custo total de uma operação RSA "do zero", incluindo a desserialização da chave privada DER (`load_der_private_key`) a cada iteração, processo que custa aproximadamente 45 ms por chamada. No nível de serviço, a chave RSA é parseada uma única vez na inicialização do `ClassicalAuthService` e mantida em memória como objeto Python pré-carregado, eliminando esse custo recorrente. A medição em camada de serviço, portanto, reflete adequadamente o regime permanente de um servidor de produção, no qual chaves não são reparseadas a cada requisição. Cabe notar que a primitiva `raw_rsa_*` utiliza o preenchimento RSA-PSS, ao passo que o `jwt_sign` adota o RS256/PKCS#1 v1.5; conforme registrado na Seção 4.3.1, essa diferença de preenchimento não afeta materialmente o custo da assinatura e, portanto, não contribui para a disparidade observada, integralmente explicada pela reserialização da chave.
+A comparação entre o `jwt_sign` (1,629 ms) e o `raw_rsa_sign` (89,323 ms) merece atenção especial. À primeira vista, a diferença sugeriria que a camada de serviço seria 54 vezes mais rápida que a primitiva — interpretação evidentemente equivocada. A explicação reside na metodologia: a primitiva raw mede o custo total de uma operação RSA "do zero", incluindo a desserialização da chave privada DER (`load_der_private_key`) a cada iteração — processo que domina o tempo medido, da ordem de 88 ms por chamada no ambiente experimental, ante menos de 1 ms da operação de assinatura RSA propriamente dita. No nível de serviço, a chave RSA é parseada uma única vez na inicialização do `ClassicalAuthService` e mantida em memória como objeto Python pré-carregado, eliminando esse custo recorrente. A medição em camada de serviço, portanto, reflete adequadamente o regime permanente de um servidor de produção, no qual chaves não são reparseadas a cada requisição. Cabe notar que a primitiva `raw_rsa_*` utiliza o preenchimento RSA-PSS, ao passo que o `jwt_sign` adota o RS256/PKCS#1 v1.5; conforme registrado na Seção 4.3.1, essa diferença de preenchimento não afeta materialmente o custo da assinatura e, portanto, não contribui para a disparidade observada, integralmente explicada pela reserialização da chave. Já na verificação, observa-se o padrão inverso — a primitiva isolada (0,113 ms, RSA-PSS via `cryptography`) é mais lenta que a camada de serviço (0,058 ms, PKCS#1 v1.5 via PyJWT); nessa escala de dezenas de microssegundos, a diferença reflete os caminhos de código e o esquema de preenchimento distintos das duas bibliotecas, e não um custo intrínseco da verificação, permanecendo ambos os valores desprezíveis em termos absolutos.
 
 Para o ML-DSA-44, o sobrecusto da camada de serviço sobre a primitiva é de cerca de 0,097 ms na assinatura, atribuível à codificação base64url do token e à composição do payload. Esse acréscimo é proporcionalmente expressivo (91,5%) por se sobrepor a uma operação criptográfica intrinsecamente rápida, mas é absoluto pequeno em valor (97 microssegundos), sem impacto perceptível na latência total do login. Já a operação de verificação ML-DSA-44 não apresenta sobrecusto mensurável entre os dois níveis, dado que o decode base64url é uma operação extremamente eficiente quando comparada à própria verificação criptográfica.
 
@@ -109,22 +108,22 @@ O consumo de memória foi medido por meio do módulo `tracemalloc` da biblioteca
 
 Tabela 5.5 — Pico de alocação de memória por operação (tracemalloc, peak bytes).
 
-| Operação                 | Algoritmo  | Pico médio (bytes) |
-|--------------------------|------------|-------------------:|
-| `jwt_sign`               | RS256      |              3.448 |
-| `pqc_sign`               | ML-DSA-44  |             10.622 |
-| `jwt_verify`             | RS256      |              2.840 |
-| `pqc_verify`             | ML-DSA-44  |             13.497 |
-| `kem_keygen`             | Kyber512   |              8.960 |
-| `kem_encapsulate`        | Kyber512   |              8.960 |
-| `kem_decapsulate`        | Kyber512   |              8.960 |
-| `raw_rsa_keygen`         | RSA-2048   |              1.933 |
-| `raw_rsa_sign`           | RSA-2048   |                732 |
-| `raw_mldsa_sign`         | ML-DSA-44  |              9.294 |
+| Operação                 | Algoritmo  | Camada  | Pico médio (bytes) |
+|--------------------------|------------|---------|-------------------:|
+| `jwt_sign`               | RS256      | Serviço |              3.448 |
+| `pqc_sign`               | ML-DSA-44  | Serviço |             10.622 |
+| `jwt_verify`             | RS256      | Serviço |              2.840 |
+| `pqc_verify`             | ML-DSA-44  | Serviço |             13.497 |
+| `kem_keygen`             | Kyber512   | Serviço |              8.960 |
+| `kem_encapsulate`        | Kyber512   | Serviço |              8.960 |
+| `kem_decapsulate`        | Kyber512   | Serviço |              8.960 |
+| `raw_rsa_keygen`         | RSA-2048   | Bruta   |              1.933 |
+| `raw_rsa_sign`           | RSA-2048   | Bruta   |                732 |
+| `raw_mldsa_sign`         | ML-DSA-44  | Bruta   |              9.294 |
 
 Fonte: Elaborado pelo autor (2026).
 
-Observa-se que as operações pós-quânticas alocam, em média, três a cinco vezes mais memória que suas equivalentes clássicas. Esse padrão é consistente com o tamanho das estruturas algébricas manipuladas: o ML-DSA-44 opera sobre matrizes de polinômios cujos coeficientes ocupam mais memória do que os números inteiros utilizados pelo RSA. No entanto, em termos absolutos, todos os valores permanecem na ordem de poucos quilobytes por operação, o que torna o consumo de memória uma preocupação secundária em sistemas web modernos, em que servidores comumente dispõem de gigabytes de memória disponível.
+Observa-se que as operações pós-quânticas alocam, em média, três a cinco vezes mais memória que suas equivalentes clássicas. Esse padrão é consistente com o tamanho das estruturas algébricas manipuladas: o ML-DSA-44 opera sobre matrizes de polinômios cujos coeficientes ocupam mais memória do que os números inteiros utilizados pelo RSA. Nota-se ainda que, no ML-DSA-44, a verificação apresenta pico de alocação ligeiramente superior ao da assinatura (13.497 contra 10.622 bytes), refletindo o fato de que ambas as operações sobre reticulados manipulam estruturas algébricas de tamanho comparável — ao contrário do RSA, no qual a verificação é substancialmente mais leve que a assinatura. No entanto, em termos absolutos, todos os valores permanecem na ordem de poucos quilobytes por operação, o que torna o consumo de memória uma preocupação secundária em sistemas web modernos, em que servidores comumente dispõem de gigabytes de memória disponível.
 
 Vale observar que os valores reportados refletem o pico de alocação registrado durante a operação criptográfica, e não o consumo permanente de memória do processo. A maior parte da memória alocada é liberada imediatamente após a operação, seja por desreferenciação automática pelo coletor de lixo do Python, seja por desalocação explícita pelos contextos `with oqs.KeyEncapsulation(...)` empregados na implementação. O efeito sobre o uso de memória residual do processo, portanto, é negligível.
 
@@ -185,7 +184,7 @@ Tabela 5.7 — Coeficiente de variação inter-run das operações avaliadas.
 
 Fonte: Elaborado pelo autor (2026).
 
-Dos vinte indicadores avaliados (incluindo as quatro operações híbridas reportadas em `results/multi_run/inter_run_stats.csv` e omitidas da tabela acima por brevidade), dezenove apresentaram coeficiente de variação inferior a 10%, o que os classifica como reprodutíveis segundo o critério adotado. Treze deles ficaram abaixo de 5%, indicando reprodutibilidade excelente. A única exceção foi a operação `pqc_sign` na camada de serviço, com CV de 12,41%.
+Dos vinte indicadores avaliados (incluindo as quatro operações híbridas e as três operações Kyber de camada bruta — `raw_kyber_keygen`, `raw_kyber_encapsulate` e `raw_kyber_decapsulate` —, todas reportadas em `results/multi_run/inter_run_stats.csv` e omitidas da tabela acima por brevidade), dezenove apresentaram coeficiente de variação inferior a 10%, o que os classifica como reprodutíveis segundo o critério adotado. Quinze deles ficaram abaixo de 5%, indicando reprodutibilidade excelente. A única exceção foi a operação `pqc_sign` na camada de serviço, com CV de 12,41%.
 
 Essa exceção merece análise específica. A mediana de `pqc_sign` foi estável entre execuções (0,182 ms na grand median, com variação de apenas 0,005 ms entre runs individuais), o que confirma que a variabilidade inter-run encontra-se na cauda da distribuição, não no regime permanente. A causa provável é a sensibilidade de operações sub-milissegundo a outliers introduzidos por pausas do coletor de lixo do Python e por escalonamento ocasional de outros processos do sistema, fenômenos que afetam desproporcionalmente operações cujo tempo médio é da ordem de centenas de microssegundos. Análise complementar indicou que três a cinco amostras por execução, dentre as cem coletadas, concentram a totalidade da variabilidade observada — comportamento documentado na literatura de benchmarking de operações criptográficas rápidas (Paquin et al., 2020).
 
@@ -193,7 +192,7 @@ A constatação prática é que os resultados são suficientemente estáveis par
 
 ## 5.6 Comparação com Referências NIST
 
-A validade externa dos resultados foi avaliada confrontando-se as latências obtidas no ambiente experimental do presente trabalho — Apple Silicon ARM64, Python 3.13 com liboqs 0.15.0 — com os valores oficiais publicados nas especificações dos algoritmos CRYSTALS-Dilithium versão 3.1 (Ducas et al., 2021) e CRYSTALS-Kyber versão 3.02 (Avanzi et al., 2021). Essas especificações reportam medições em quilociclos sobre processadores Intel x86_64 específicos, em duas variantes de implementação: referência em C portável e versão otimizada com instruções AVX2. As Tabelas 5.8 e 5.9 apresentam a comparação em termos de tempo absoluto, após conversão de quilociclos para milissegundos com base na frequência de operação de cada plataforma de referência.
+A validade externa dos resultados foi avaliada confrontando-se as latências obtidas no ambiente experimental do presente trabalho — Apple Silicon ARM64, Python 3.13 com liboqs 0.15.0 — com os valores oficiais publicados nas especificações dos algoritmos CRYSTALS-Dilithium versão 3.1 (Bai et al., 2021) e CRYSTALS-Kyber versão 3.02 (Avanzi et al., 2021). Essas especificações reportam medições em quilociclos sobre processadores Intel x86_64 específicos, em duas variantes de implementação: referência em C portável e versão otimizada com instruções AVX2. As Tabelas 5.8 e 5.9 apresentam a comparação em termos de tempo absoluto, após conversão de quilociclos para milissegundos com base na frequência de operação de cada plataforma de referência.
 
 Tabela 5.8 — Comparação ML-DSA-44 (Dilithium2): este trabalho versus referência NIST.
 
@@ -203,7 +202,7 @@ Tabela 5.8 — Comparação ML-DSA-44 (Dilithium2): este trabalho versus referê
 | Sign     |     0,4158 |    0,0997 |              0,106 |          0,25× |         1,06× |
 | Verify   |     0,1259 |    0,0455 |              0,044 |          0,35× |         0,97× |
 
-Fonte: Elaborado pelo autor (2026), a partir de Ducas et al. (2021), Tabela 1, Seção 5.8.
+Fonte: Elaborado pelo autor (2026), a partir de Bai et al. (2021), Tabela 1, Seção 5.8.
 
 Tabela 5.9 — Comparação Kyber512: este trabalho versus referência NIST.
 
