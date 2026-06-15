@@ -162,7 +162,7 @@ A análise consolidada deste trade-off é que o principal obstáculo à adoção
 
 ## 5.5 Reprodutibilidade e Validação Estatística
 
-A reprodutibilidade dos resultados foi avaliada por meio de três execuções independentes do protocolo de benchmarking, com intervalo de resfriamento de trinta segundos entre execuções para mitigar efeitos de thermal throttling no processador. O coeficiente de variação inter-run (CV%) foi adotado como métrica de estabilidade, conforme definido no Capítulo 4. A Tabela 5.7 apresenta os resultados consolidados.
+A reprodutibilidade dos resultados foi avaliada por meio de três execuções independentes do protocolo de benchmarking, conforme definido na Seção 4.4.4. O coeficiente de variação inter-run (CV%) foi adotado como métrica de estabilidade. A Tabela 5.7 apresenta os resultados consolidados.
 
 Tabela 5.7 — Coeficiente de variação inter-run das operações avaliadas.
 
@@ -181,10 +181,17 @@ Tabela 5.7 — Coeficiente de variação inter-run das operações avaliadas.
 | `raw_mldsa_keygen`        | ML-DSA-44  |           0,049 |            5,48  | Aceitável            |
 | `raw_mldsa_sign`          | ML-DSA-44  |           0,106 |            4,63  | Excelente            |
 | `raw_mldsa_verify`        | ML-DSA-44  |           0,044 |            1,60  | Excelente            |
+| `raw_kyber_keygen`        | Kyber512   |           0,018 |            2,23  | Excelente            |
+| `raw_kyber_encapsulate`   | Kyber512   |           0,018 |            1,55  | Excelente            |
+| `raw_kyber_decapsulate`   | Kyber512   |           0,016 |            0,79  | Excelente            |
+| `hybrid_sign_classical`   | RS256      |           1,686 |            6,24  | Aceitável            |
+| `hybrid_sign_pqc`         | ML-DSA-44  |           0,204 |            8,41  | Aceitável            |
+| `hybrid_verify_classical` | RS256      |           0,056 |            0,92  | Excelente            |
+| `hybrid_verify_pqc`       | ML-DSA-44  |           0,046 |            0,67  | Excelente            |
 
 Fonte: Elaborado pelo autor (2026).
 
-Dos vinte indicadores avaliados (incluindo as quatro operações híbridas e as três operações Kyber de camada bruta — `raw_kyber_keygen`, `raw_kyber_encapsulate` e `raw_kyber_decapsulate` —, todas reportadas em `results/multi_run/inter_run_stats.csv` e omitidas da tabela acima por brevidade), dezenove apresentaram coeficiente de variação inferior a 10%, o que os classifica como reprodutíveis segundo o critério adotado. Quinze deles ficaram abaixo de 5%, indicando reprodutibilidade excelente. A única exceção foi a operação `pqc_sign` na camada de serviço, com CV de 12,41%.
+Das vinte operações avaliadas, dezenove apresentaram coeficiente de variação inter-execução inferior a 10%, o que as classifica como reprodutíveis segundo o critério adotado; quinze ficaram abaixo de 5%, indicando reprodutibilidade excelente. A única exceção foi a operação `pqc_sign` na camada de serviço, com CV de 12,41%.
 
 Essa exceção merece análise específica. A mediana de `pqc_sign` foi estável entre execuções (0,182 ms na grand median, com variação de apenas 0,005 ms entre runs individuais), o que confirma que a variabilidade inter-run encontra-se na cauda da distribuição, não no regime permanente. A causa provável é a sensibilidade de operações sub-milissegundo a outliers introduzidos por pausas do coletor de lixo do Python e por escalonamento ocasional de outros processos do sistema, fenômenos que afetam desproporcionalmente operações cujo tempo médio é da ordem de centenas de microssegundos. Análise complementar indicou que três a cinco amostras por execução, dentre as cem coletadas, concentram a totalidade da variabilidade observada — comportamento documentado na literatura de benchmarking de operações criptográficas rápidas (Paquin et al., 2020).
 
@@ -202,7 +209,7 @@ Tabela 5.8 — Comparação ML-DSA-44 (Dilithium2): este trabalho versus referê
 | Sign     |     0,4158 |    0,0997 |              0,106 |          0,25× |         1,06× |
 | Verify   |     0,1259 |    0,0455 |              0,044 |          0,35× |         0,97× |
 
-Fonte: Elaborado pelo autor (2026), a partir de Bai et al. (2021), Tabela 1, Seção 5.8.
+Fonte: Elaborado pelo autor (2026), a partir das contagens de ciclos de referência reportadas por Bai et al. (2021), Tabela 1.
 
 Tabela 5.9 — Comparação Kyber512: este trabalho versus referência NIST.
 
@@ -212,7 +219,7 @@ Tabela 5.9 — Comparação Kyber512: este trabalho versus referência NIST.
 | Encaps   |     0,0443 |    0,0129 |              0,018 |          0,41× |         1,39× |
 | Decaps   |     0,0538 |    0,0099 |              0,016 |          0,30× |         1,62× |
 
-Fonte: Elaborado pelo autor (2026), a partir de Avanzi et al. (2021), Tabela 2, Seção 2.2.
+Fonte: Elaborado pelo autor (2026), a partir das contagens de ciclos de referência reportadas por Avanzi et al. (2021), Tabela 2.
 
 > Legenda: razão `< 1,0×` indica que o ambiente experimental deste trabalho é mais rápido que a referência; razão `> 1,0×` indica o oposto.
 
