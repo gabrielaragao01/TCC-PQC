@@ -42,7 +42,7 @@ NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY. **FIPS 204: Module-Lattice-Based
 
 NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY. **FIPS 205: Stateless Hash-Based Digital Signature Standard**. Gaithersburg: U.S. Department of Commerce, ago. 2024c. DOI: 10.6028/NIST.FIPS.205.
 
-OLUSHOLA, A.; MEENAKSHI, S. P. Design and implementation of an authenticated post-quantum session protocol using ML-KEM (Kyber), ML-DSA (Dilithium), and AES-256-GCM. **Frontiers in Physics**, v. 13, 2025. DOI: 10.3389/fphy.2025.1723966.
+OLUSHOLA, A.; MEENAKSHI, S. P. Design and implementation of an authenticated post-quantum session protocol using ML-KEM (Kyber), ML-DSA (Dilithium), and AES-256-GCM. **Frontiers in Physics**, v. 13, art. 1723966, 2025. DOI: 10.3389/fphy.2025.1723966.
 
 OPEN QUANTUM SAFE. **liboqs: C library for prototyping and experimenting with quantum-resistant cryptography**. Versão 0.15.0. 2025. Disponível em: https://github.com/open-quantum-safe/liboqs. Acesso em: 10 maio 2026.
 

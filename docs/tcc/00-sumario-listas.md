@@ -9,9 +9,11 @@
 
 | | | |
 |---|---|---:|
-| Tabela 2.1 | Síntese comparativa dos trabalhos relacionados | p. — |
-| Tabela 4.1 | Componentes do ambiente experimental | p. — |
-| Tabela 4.2 | Operações criptográficas avaliadas no protocolo experimental | p. — |
+| Tabela 2.1 | Características dos trabalhos relacionados | p. — |
+| Tabela 2.2 | Métricas avaliadas e diferenças em relação a este TCC | p. — |
+| Tabela 4.1 | Stack de implementação comum aos três modos de autenticação | p. — |
+| Tabela 4.2 | Componentes do ambiente experimental | p. — |
+| Tabela 4.3 | Operações criptográficas avaliadas no protocolo experimental | p. — |
 | Tabela 5.1 | Latência da geração de pares de chaves no nível de primitiva (raw crypto) | p. — |
 | Tabela 5.2 | Latência das operações de assinatura e verificação no nível de serviço | p. — |
 | Tabela 5.3 | Latência das operações Kyber512 no nível de serviço | p. — |
@@ -42,8 +44,7 @@
 | 2.3 | Esquemas Híbridos Clássico e Pós-Quântico | |
 | 2.4 | PQC em TLS e Protocolos de Sessão | |
 | 2.5 | Benchmarks Cross-Plataforma de Primitivas Pós-Quânticas | |
-| 2.6 | Síntese Comparativa | |
-| 2.7 | Síntese das Lacunas Identificadas | |
+| 2.6 | Síntese Comparativa e Lacunas Identificadas | |
 | **3** | **REFERENCIAL TEÓRICO** | p. — |
 | 3.1 | Criptografia Assimétrica Clássica: RSA-2048 e JWT RS256 | |
 | 3.1.1 | RSA-2048 | |
@@ -56,7 +57,7 @@
 | 3.7 | Métricas de Desempenho | |
 | **4** | **METODOLOGIA** | p. — |
 | 4.1 | Caracterização da Pesquisa | |
-| 4.2 | Arquitetura do Sistema Implementado | |
+| 4.2 | Arquitetura do Sistema | |
 | 4.3 | Implementação dos Modos de Autenticação | |
 | 4.3.1 | Modo Clássico (RSA-2048 + JWT RS256) | |
 | 4.3.2 | Modo PQC Puro (ML-DSA-44 + Kyber512) | |
@@ -83,8 +84,5 @@
 | 5.6 | Comparação com Referências NIST | |
 | 5.7 | Análise do Modo Híbrido | |
 | **6** | **CONCLUSÃO** | p. — |
-| 6.1 | Síntese dos Resultados | |
-| 6.2 | Limitações | |
-| 6.3 | Trabalhos Futuros | |
 | | **REFERÊNCIAS** | p. — |
 | | **APÊNDICE A — PROTOCOLO DA REVISÃO DE LITERATURA** | p. — |

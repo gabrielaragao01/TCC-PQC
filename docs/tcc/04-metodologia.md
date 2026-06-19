@@ -8,7 +8,7 @@ A escolha por uma pesquisa experimental justifica-se pela natureza do problema i
 
 A natureza quantitativa decorre da coleta de métricas mensuráveis e reproduzíveis: latência em milissegundos, consumo de memória em bytes e tamanhos de payload em bytes. Já o caráter descritivo-comparativo manifesta-se na análise paralela das três abordagens implementadas, com o objetivo de identificar diferenças sistemáticas entre paradigmas criptográficos, e não de propor um novo algoritmo.
 
-## 4.2 Arquitetura do Sistema Implementado
+## 4.2 Arquitetura do Sistema
 
 O sistema desenvolvido segue os princípios da Clean Architecture, organizando o código em camadas com responsabilidades bem definidas e dependências unidirecionais. A camada de interface (API) expõe os endpoints REST consumidos pelos clientes; a camada de serviço (Auth Service) implementa a lógica de autenticação; a camada de criptografia define contratos abstratos por meio de interfaces; e as implementações concretas dessas interfaces encapsulam o uso das bibliotecas criptográficas externas, conforme ilustrado na Figura 4.1.
 
@@ -59,41 +59,46 @@ Fonte: Elaborado pelo autor (2026).
 
 A separação entre interface e implementação concentra-se em dois contratos abstratos. A interface `IDigitalSignature` define as operações comuns a qualquer algoritmo de assinatura digital — geração de par de chaves, assinatura de mensagem e verificação de assinatura — sem expor detalhes internos do algoritmo subjacente. De forma análoga, a interface `IKeyEncapsulation` define as operações de geração de chaves, encapsulamento e decapsulamento para mecanismos KEM. Essa abstração foi adotada como aplicação direta do princípio de inversão de dependência, segundo o qual módulos de alto nível não devem depender de módulos de baixo nível, mas sim de abstrações.
 
-A escolha arquitetural tem motivação metodológica clara: a substituição de um algoritmo criptográfico — por exemplo, a troca do RSA-2048 pelo ML-DSA-44 — não exige modificações nas camadas de serviço ou de API. Apenas a implementação concreta da interface é alterada, garantindo que os experimentos comparativos sejam realizados sobre o mesmo fluxo de autenticação, isolando o efeito do algoritmo em si das demais variáveis do sistema.
-
-A separação em camadas tem implicação direta para a validade interna dos benchmarks: ao encapsular as implementações criptográficas em interfaces intercambiáveis, o sistema garante que a lógica de autenticação — validação de credenciais, montagem de payload, codificação base64url, retorno HTTP — seja idêntica nos três modos avaliados. Assim, as diferenças de desempenho observadas entre os modos são atribuíveis exclusivamente à primitiva criptográfica subjacente, e não a variações na lógica de controle ou na estrutura de dados do token. Esse isolamento arquitetural é o que torna metodologicamente lícita a comparação direta entre os números coletados para cada algoritmo.
+A escolha tem motivação metodológica clara: trocar um algoritmo — por exemplo, RSA-2048 por ML-DSA-44 — altera apenas a implementação concreta da interface, sem tocar nas camadas de serviço ou de API. Com isso, a lógica de autenticação (validação de credenciais, montagem de payload, codificação base64url e retorno HTTP) permanece idêntica nos três modos, e as diferenças de desempenho observadas tornam-se atribuíveis exclusivamente à primitiva criptográfica subjacente, e não a variações na lógica de controle ou na estrutura do token. É esse isolamento arquitetural que sustenta a validade interna dos benchmarks e torna metodologicamente lícita a comparação direta entre os números coletados para cada algoritmo.
 
 A persistência dos usuários cadastrados é realizada em banco de dados SQLite, com armazenamento de senhas por meio do algoritmo bcrypt para hashing. Embora o gerenciamento de usuários não seja foco da avaliação experimental, sua presença é necessária para que o fluxo de autenticação corresponda a um cenário realista. A camada de banco foi mantida deliberadamente simples justamente para que não se torne uma fonte de variabilidade nos benchmarks.
 
 ## 4.3 Implementação dos Modos de Autenticação
 
-Foram implementados três modos de autenticação que compartilham a mesma arquitetura subjacente, diferindo apenas nos algoritmos criptográficos empregados e na forma como combinam suas operações. Os três modos coexistem no mesmo sistema e podem ser exercitados de forma independente, o que viabiliza a comparação direta sem viés introduzido por mudanças de plataforma ou ambiente entre os experimentos.
+Foram implementados três modos de autenticação que compartilham a mesma arquitetura (Seção 4.2) e o mesmo fluxo de requisição, diferindo apenas nos algoritmos criptográficos empregados e na forma de compô-los. Os três coexistem no mesmo sistema e podem ser exercitados de forma independente, o que viabiliza a comparação direta sem viés de plataforma ou ambiente. A Tabela 4.1 resume o stack de implementação comum aos três modos.
+
+**Tabela 4.1** — Stack de implementação comum aos três modos de autenticação.
+
+| Componente | Tecnologia / esquema | Versão |
+|------------|----------------------|--------|
+| Runtime | Python | 3.13 |
+| Framework web | FastAPI | 0.135.1 |
+| Assinatura clássica | PyJWT → cryptography (RS256, PKCS#1 v1.5) | — |
+| Assinatura PQC | liboqs-python → liboqs (ML-DSA-44, FIPS 204) | 0.14.1 / 0.15.0 |
+| Encapsulamento PQC | liboqs-python → liboqs (ML-KEM-512 / Kyber512, FIPS 203) | 0.14.1 / 0.15.0 |
+| Persistência | SQLite + bcrypt | — |
+
+Fonte: Elaborado pelo autor (2026).
 
 ### 4.3.1 Modo Clássico (RSA-2048 + JWT RS256)
 
-O modo clássico funciona como linha de base de comparação e adota dois pilares amplamente utilizados em sistemas web atuais: o algoritmo de assinatura RSA com chave de 2048 bits e o padrão JSON Web Token assinado com o esquema RS256, conforme definido pela RFC 7519. O par de chaves RSA é gerado uma única vez na inicialização do serviço, decisão consistente com o padrão observado em servidores de produção, nos quais a geração de chaves é amortizada ao longo de todo o tempo de execução do processo.
+O modo clássico é a linha de base de comparação; a justificativa da escolha de RSA-2048 e RS256 está na Seção 3.1. O par de chaves RSA é gerado uma única vez na inicialização do serviço e mantido em memória — decisão consistente com servidores de produção, em que o custo de geração é amortizado ao longo do processo. No login, após a validação de credenciais por bcrypt, o serviço monta o payload JWT (identificador do usuário, instantes de emissão e expiração) e o assina com a chave privada via PyJWT, que delega a operação à biblioteca `cryptography`. Na verificação, executada a cada requisição subsequente, o token é decodificado e sua assinatura conferida com a chave pública.
 
-No fluxo de login, após a validação das credenciais do usuário pelo bcrypt, o serviço constrói um payload JWT contendo o identificador do usuário, o instante de emissão e o instante de expiração do token. Esse payload é assinado com a chave privada RSA por meio da biblioteca PyJWT, que internamente delega a operação criptográfica à biblioteca `cryptography`. Já a verificação do token, realizada nas requisições subsequentes, decodifica o JWT e verifica a integridade da assinatura com a chave pública correspondente, recusando o acesso caso o token tenha sido adulterado ou esteja expirado.
-
-A escolha do RSA-2048 como referência clássica baseia-se no fato de que esse parâmetro é amplamente recomendado por órgãos normativos para uso até cerca de 2030, sendo portanto representativo do estado da prática atual em sistemas web. O esquema RS256, por sua vez, é o algoritmo mais comum entre tokens JWT em produção, o que reforça a relevância da comparação.
-
-Cabe registrar uma distinção de implementação relevante para a interpretação dos resultados do Capítulo 5. A assinatura no fluxo de serviço (`jwt_sign` e `jwt_verify`) é produzida pela biblioteca PyJWT no esquema RS256, que adota o preenchimento PKCS#1 v1.5; já as operações de primitiva isolada (`raw_rsa_sign` e `raw_rsa_verify`, Seção 4.5) empregam a implementação RSA da biblioteca `cryptography` com preenchimento RSA-PSS. A escolha do esquema de preenchimento não altera de forma material o custo computacional da operação — dominado, em ambos os casos, pela mesma exponenciação modular com a chave privada de 2048 bits —, de modo que a medição na camada de primitiva permanece representativa do RS256 e a comparação frente ao ML-DSA-44 mantém-se válida.
+Registra-se uma distinção de implementação relevante para o Capítulo 5: o fluxo de serviço (`jwt_sign` / `jwt_verify`) usa RS256 com preenchimento PKCS#1 v1.5, enquanto as primitivas isoladas (`raw_rsa_sign` / `raw_rsa_verify`, Seção 4.5) usam RSA-PSS. Como o custo é dominado pela mesma exponenciação modular com a chave de 2048 bits, o esquema de preenchimento não altera materialmente a latência, e a medição permanece representativa do RS256.
 
 ### 4.3.2 Modo PQC Puro (ML-DSA-44 + Kyber512)
 
-O modo pós-quântico puro substitui completamente os algoritmos clássicos por suas contrapartes resistentes a ataques quânticos, mantendo o fluxo de autenticação inalterado. A assinatura digital é realizada pelo ML-DSA-44, padronizado pelo NIST como FIPS 204, e o encapsulamento de chaves emprega o ML-KEM-512 (anteriormente conhecido como Kyber512), padronizado como FIPS 203. Ambos os algoritmos são utilizados por meio da biblioteca liboqs, na versão 0.15.0, acessada a partir de Python pelo binding `liboqs-python` 0.14.1.
+O modo pós-quântico substitui os algoritmos clássicos pelas contrapartes resistentes a ataques quânticos, mantendo o fluxo inalterado: assinatura por ML-DSA-44 (FIPS 204) e encapsulamento por ML-KEM-512 / Kyber512 (FIPS 203), ambos via liboqs 0.15.0, acessada a partir do binding `liboqs-python` 0.14.1.
 
-A geração do token PQC adota um formato customizado em base64url, semelhante em estrutura ao JWT clássico, mas dimensionado para acomodar o tamanho da assinatura ML-DSA-44 — aproximadamente 2.420 bytes, contra os 256 bytes de uma assinatura RSA-2048. O token é composto por três partes codificadas — cabeçalho, payload e assinatura — concatenadas por pontos. A escolha por um formato próprio foi necessária porque o padrão JWT, em sua especificação atual, ainda não contempla algoritmos pós-quânticos como tipos de assinatura registrados.
+O token PQC adota um formato próprio em base64url, análogo em estrutura ao JWT (cabeçalho, payload e assinatura separados por pontos), mas dimensionado para a assinatura de cerca de 2.420 bytes do ML-DSA-44. O formato próprio foi necessário porque o JWT, em sua especificação atual, ainda não registra algoritmos pós-quânticos como tipos de assinatura.
 
-Adicionalmente ao fluxo de tokens, este modo expõe um endpoint dedicado à troca de chaves por meio do Kyber512, no qual o servidor gera um par de chaves KEM, recebe um ciphertext do cliente, e realiza o decapsulamento para derivar uma chave simétrica compartilhada. Esse endpoint não é parte do fluxo de autenticação por token em si, mas representa um caso de uso complementar — o estabelecimento de canais de sessão pós-quânticos — que é crítico para a discussão sobre migração completa de protocolos.
+Além do fluxo de tokens, este modo expõe um endpoint dedicado de troca de chaves por Kyber512: o servidor gera um par de chaves KEM, recebe um ciphertext do cliente e executa o decapsulamento para derivar a chave simétrica compartilhada. O endpoint não integra o fluxo de autenticação por token, mas representa o caso de uso complementar de estabelecimento de canal de sessão pós-quântico, medido isoladamente na Seção 5.1.3.
 
 ### 4.3.3 Modo Híbrido
 
-O modo híbrido emprega simultaneamente o algoritmo clássico e o pós-quântico em cada operação de autenticação, com o objetivo de avaliar o custo de uma estratégia de migração gradual. A implementação utilizada não corresponde ao modelo de "dupla assinatura", em que um único token recebe duas assinaturas concatenadas, mas sim ao modelo de "tokens duplos", em que o servidor responde a cada login com dois tokens independentes — um JWT RS256 e um token ML-DSA-44 — entregues conjuntamente ao cliente.
+O modo híbrido executa o algoritmo clássico e o pós-quântico em cada autenticação. A implementação não adota a "dupla assinatura" (um único token com duas assinaturas concatenadas), e sim a estratégia de "tokens duplos": o servidor responde a cada login com dois tokens independentes — um JWT RS256 e um token ML-DSA-44 — entregues juntos ao cliente. Essa estratégia permite verificação independente e suporta migração gradual, em que clientes em estágios distintos de adoção usam apenas um dos tokens; a motivação completa está na Seção 2.6.
 
-Essa escolha foi orientada por dois fatores. Em primeiro lugar, a estratégia de tokens duplos permite verificação independente: caso uma das duas verificações falhe, o sistema pode tomar decisões diferenciadas, como bloquear a requisição ou registrá-la para auditoria. Em segundo lugar, esse modelo é mais alinhado com cenários reais de migração, nos quais clientes em diferentes estágios de adoção podem usar apenas um dos dois tokens enquanto a infraestrutura é gradualmente atualizada.
-
-A implementação do serviço híbrido compõe os serviços clássico e pós-quântico por meio de injeção de dependência, sem reescrever a lógica criptográfica subjacente. A latência total observada no modo híbrido equivale, portanto, à soma das latências individuais somada ao custo de orquestração — custo esse que se mantém baixo, pois o fluxo de autenticação não introduz operações adicionais além das já presentes em cada modo isolado.
+O serviço híbrido compõe os serviços clássico e pós-quântico por injeção de dependência, sem reescrever a lógica criptográfica. A latência total equivale, portanto, à soma das latências individuais mais o custo de orquestração — que se mantém baixo, pois nenhuma operação adicional é introduzida além das já presentes em cada modo isolado.
 
 ## 4.4 Protocolo de Benchmarking
 
@@ -117,9 +122,9 @@ O pass de memória utilizou um número reduzido de iterações por operação, s
 
 ### 4.4.3 Ambiente de Execução
 
-Todos os experimentos foram executados em um único ambiente de hardware e software, descrito na Tabela 4.1. A uniformidade do ambiente é necessária para que as comparações entre algoritmos não sejam contaminadas por variações de plataforma; em contrapartida, as conclusões derivadas dos números absolutos coletados são específicas para esse ambiente, e a generalização para outras plataformas exige cautela e, idealmente, replicação experimental — limitação que será discutida no Capítulo 6.
+Todos os experimentos foram executados em um único ambiente de hardware e software, descrito na Tabela 4.2. A uniformidade do ambiente é necessária para que as comparações entre algoritmos não sejam contaminadas por variações de plataforma; em contrapartida, as conclusões derivadas dos números absolutos coletados são específicas para esse ambiente, e a generalização para outras plataformas exige cautela e, idealmente, replicação experimental — limitação que será discutida no Capítulo 6.
 
-**Tabela 4.1** — Componentes do ambiente experimental.
+**Tabela 4.2** — Componentes do ambiente experimental.
 
 | Componente | Versão / Configuração |
 |------------|----------------------|
@@ -134,10 +139,6 @@ Todos os experimentos foram executados em um único ambiente de hardware e softw
 
 Fonte: Elaborado pelo autor (2026).
 
-A biblioteca liboqs foi compilada a partir do código-fonte oficial do projeto Open Quantum Safe, e não instalada por meio de pacotes pré-compilados. Essa escolha foi feita para garantir que as implementações de ML-DSA-44 e Kyber512 utilizadas correspondessem exatamente à versão alinhada com a padronização NIST de 2024. A versão 0.15.0 da liboqs C apresenta uma divergência cosmética em relação à versão 0.14.1 do binding Python, mas o núcleo matemático dos algoritmos avaliados é idêntico em ambas, o que foi verificado com base na documentação oficial da liboqs e na correspondência declarada entre os nomes dos algoritmos nas duas versões.
-
-A escolha pela arquitetura ARM64 (Apple Silicon) é relevante para a interpretação dos resultados absolutos coletados. Algoritmos lattice-based como o ML-DSA-44 e o Kyber512 fazem uso intensivo de operações sobre polinômios em corpos finitos, padrão computacional que se beneficia de instruções SIMD — em particular, das extensões NEON disponíveis nos processadores Apple M-series. Implementações otimizadas da liboqs aproveitam essas instruções quando detectam a plataforma, o que tende a estreitar a distância de desempenho entre algoritmos pós-quânticos e clássicos em relação ao que seria observado em arquiteturas sem aceleração vetorial equivalente. Esse efeito é retomado na análise comparativa do Capítulo 5 e discutido como limitação de generalização na Seção 4.6.
-
 ### 4.4.4 Validação de Reprodutibilidade
 
 Para verificar a estabilidade dos resultados ao longo do tempo e em condições levemente diferentes de execução, todo o protocolo de medição foi repetido em três execuções independentes. As execuções foram realizadas em momentos distintos, com reinicialização do processo Python e um intervalo de resfriamento de trinta segundos entre elas — este último para mitigar efeitos de *thermal throttling* no processador —, garantindo que efeitos como acúmulo de cache, fragmentação de memória ou variações de carga térmica do hardware fossem amostrados.
@@ -148,9 +149,7 @@ A métrica de validação de reprodutibilidade utilizada foi o coeficiente de va
 
 O conjunto de operações avaliadas foi organizado em duas categorias complementares, denominadas neste trabalho como camada de serviço e camada bruta. A camada de serviço corresponde à operação criptográfica integrada ao fluxo completo de autenticação — incluindo, por exemplo, a codificação base64url de um token JWT após sua assinatura. Já a camada bruta corresponde à primitiva criptográfica isolada, sem o overhead de codificação, formatação ou montagem de payload. A medição em ambas as camadas permite distinguir o custo intrínseco do algoritmo do custo agregado pelo formato de token utilizado, informação relevante para identificar oportunidades de otimização específicas.
 
-A Tabela 4.2 lista as 20 operações que compõem o conjunto experimental, agrupadas por modo de autenticação. As operações marcadas como camada de serviço refletem o cenário de uso real em uma API web, ao passo que as operações marcadas como camada bruta servem como referência inferior do custo computacional do algoritmo.
-
-**Tabela 4.2** — Operações criptográficas avaliadas no protocolo experimental.
+**Tabela 4.3** — Operações criptográficas avaliadas no protocolo experimental.
 
 | Operação | Algoritmo | Camada | Contexto |
 |----------|-----------|--------|----------|
@@ -177,7 +176,9 @@ A Tabela 4.2 lista as 20 operações que compõem o conjunto experimental, agrup
 
 Fonte: Elaborado pelo autor (2026).
 
-Adicionalmente às operações de latência e memória, foram também coletadas medidas de tamanho dos artefatos transmitidos: chaves públicas, chaves privadas, assinaturas e ciphertexts. Embora o tamanho não seja, a rigor, uma métrica de desempenho dinâmico, ele representa uma dimensão essencial de comparação em sistemas de autenticação web, nos quais o overhead de rede de cada requisição é determinado pelo tamanho do token transmitido em cabeçalhos HTTP. A discussão integrada de latência, memória e tamanho de payload é apresentada no Capítulo 5. Em conformidade com o compromisso de reprodutibilidade declarado neste trabalho, o código-fonte completo do sistema, o protocolo de benchmarking e os dados brutos de medição encontram-se publicamente disponíveis no repositório do projeto, em https://github.com/gabrielaragao01/tcc-pqc-auth.
+A Tabela 4.3 lista as 20 operações que compõem o conjunto experimental, agrupadas por modo de autenticação. As operações marcadas como camada de serviço refletem o cenário de uso real em uma API web, ao passo que as operações marcadas como camada bruta servem como referência inferior do custo computacional do algoritmo.
+
+Em conformidade com o compromisso de reprodutibilidade declarado neste trabalho, o código-fonte completo do sistema, o protocolo de benchmarking e os dados brutos de medição encontram-se publicamente disponíveis no repositório do projeto, em https://github.com/gabrielaragao01/tcc-pqc-auth.
 
 ## 4.6 Ameaças à Validade
 
@@ -185,18 +186,12 @@ Trabalhos experimentais em engenharia de software, especialmente os de natureza 
 
 ### 4.6.1 Validade Interna
 
-A validade interna refere-se à confiança de que as diferenças de desempenho observadas entre os algoritmos são, de fato, atribuíveis aos algoritmos em si, e não a fatores incidentais do ambiente ou da implementação. A principal ameaça nessa categoria é o ruído de medição introduzido por processos concorrentes, pelo agendador do sistema operacional e por mecanismos dinâmicos do interpretador Python — como o garbage collector. Para mitigar esse risco, a coleta foi executada em ambiente com processos em segundo plano minimizados, foram adotadas 10 iterações de warmup antes de cada bloco de medição e o coeficiente de variação entre execuções independentes foi monitorado como critério de aceitação, conforme detalhado na Seção 4.4.4.
-
-Uma segunda ameaça interna é o acoplamento entre as medições de tempo e de memória, dado que o `tracemalloc` introduz overhead em cada alocação. Essa ameaça foi mitigada pela separação em passes independentes: a latência é coletada com o `tracemalloc` desativado e a memória é coletada em um passe dedicado, com timing desativado. Por fim, a uniformidade do fluxo de autenticação entre os três modos — garantida pela arquitetura em camadas descrita na Seção 4.2 — é o que sustenta a atribuição causal das diferenças observadas exclusivamente à primitiva criptográfica subjacente.
+A validade interna diz respeito a atribuir as diferenças observadas aos algoritmos, e não a fatores incidentais. A principal ameaça é o ruído de medição (processos concorrentes, escalonador do SO, coletor de lixo do Python), mitigado por ambiente com processos de fundo minimizados, dez iterações de warmup por bloco e monitoramento do coeficiente de variação inter-execução (Seção 4.4.4). Uma segunda ameaça é o acoplamento entre as medições de tempo e de memória, dado o overhead do `tracemalloc`; ela é mitigada pela separação em passes independentes. Por fim, a uniformidade do fluxo entre os três modos — garantida pela arquitetura em camadas (Seção 4.2) — é o que sustenta a atribuição causal das diferenças à primitiva criptográfica.
 
 ### 4.6.2 Validade Externa
 
-A validade externa diz respeito ao grau em que os resultados obtidos podem ser generalizados para outros ambientes, plataformas e cenários de uso. As principais limitações de generalização deste trabalho são as seguintes. Primeiro, os benchmarks foram executados em arquitetura ARM64 (Apple Silicon) — uma plataforma que oferece instruções SIMD favoráveis a algoritmos lattice-based, conforme discutido na Seção 4.4.3. Resultados em arquiteturas x86_64, em microcontroladores embarcados ou em ambientes sem aceleração vetorial podem apresentar razões de desempenho distintas, especialmente entre os algoritmos pós-quânticos e os clássicos. Segundo, a linguagem de implementação do serviço é Python, que introduz overhead de interpretação não presente em servidores escritos em C, Rust ou Go; embora as primitivas criptográficas em si executem em código nativo (liboqs em C, `cryptography` em Rust), o caminho ao redor delas — montagem de payload, serialização e despacho — é mais oneroso do que em servidores de baixo nível.
-
-Uma terceira limitação é a ausência de uma camada TLS over-the-wire nas medições: os benchmarks isolam o custo criptográfico de autenticação em si, mas em produção esse custo coexiste com o handshake TLS e com possíveis primitivas pós-quânticas adicionais no transporte. Por fim, o ambiente foi single-threaded e sem carga concorrente; o comportamento sob alta concorrência — incluindo contenção por garbage collector, fragmentação de heap e pressão sobre cache — não é capturado pelo protocolo adotado e ficará como recomendação para trabalhos futuros.
+A generalização dos resultados é limitada por quatro fatores: (i) a arquitetura ARM64 (Apple Silicon), cujas instruções SIMD favorecem algoritmos lattice-based; (ii) a linguagem Python, que adiciona overhead de interpretação ausente em servidores em C, Rust ou Go, ainda que as primitivas executem em código nativo; (iii) a ausência de uma camada TLS over-the-wire, isolando o custo de autenticação do handshake de transporte; e (iv) o regime single-threaded, sem carga concorrente. Esses limites são retomados, em síntese, no Capítulo 6.
 
 ### 4.6.3 Validade de Construto
 
-A validade de construto refere-se à correspondência entre o que se mede e o que se pretende afirmar. Neste trabalho, mede-se a latência e a memória de primitivas criptográficas integradas a um fluxo de autenticação isolado, com o objetivo de afirmar algo sobre o custo prático da adoção de algoritmos pós-quânticos em sistemas web. Há uma distância entre essas duas grandezas que precisa ser reconhecida: a latência de uma primitiva isolada não é igual à latência percebida pelo usuário final em um sistema distribuído real, na qual entram fatores como latência de rede, tempo de resolução DNS, custo de TLS, fila de requisições no servidor e proxy reverso. Por essa razão, os resultados aqui apresentados devem ser lidos como uma referência inferior do custo agregado: se uma primitiva é cara em isolamento, ela tenderá a ser pelo menos tão cara em produção.
-
-Para reduzir essa distância, o protocolo separa explicitamente as camadas de medição em duas — *camada bruta* (primitiva isolada) e *camada de serviço* (primitiva integrada ao fluxo de token) —, permitindo distinguir o custo intrínseco do algoritmo do custo agregado pelo formato de token adotado. Essa decomposição torna mais transparente quais frações do tempo observado decorrem do algoritmo em si e quais decorrem da camada de aplicação ao redor dele, o que aumenta a aderência entre o construto medido e a afirmação que se pretende fazer com base nele.
+Mede-se a latência e a memória de primitivas integradas a um fluxo de autenticação isolado para afirmar algo sobre o custo prático de adoção em sistemas web. Como a latência de uma primitiva isolada não equivale à latência percebida pelo usuário final em um sistema distribuído (rede, DNS, TLS, fila de requisições, proxy reverso), os resultados devem ser lidos como referência inferior do custo agregado. Para reduzir essa distância, o protocolo separa explicitamente camada bruta e camada de serviço (Seção 4.5), tornando transparente quais frações do tempo decorrem do algoritmo e quais decorrem da aplicação ao seu redor.
